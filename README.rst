@@ -64,7 +64,7 @@ When the interface has opened, complete the following steps on the file select s
 4. Press `Parse` and wait while the MSA config file is parsed and the wavelengths are calculated.
 5. Once this is complete, press `Show the Spectrum Display!` to view the visualization.
 
-<<screenshot>>
+.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/fileselect_screen.tiff
 
 **Spectrum View Screen**
 
@@ -78,7 +78,7 @@ Click `Save...` and choose a filename to export a PNG image of the spectrum disp
 
 Click `Shutters...` to move to the shutter view Screen (see below), or `Back` to return to the file select Screen.
 
-<<screenshot>>
+.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/spectrumview_screen.tiff
 
 **Shutter View Screen**
 
@@ -87,3 +87,5 @@ On the shutter view screen, a map of the four MSA quadrants is shown, indicating
 Click on any open shutter to select or deselect it; selected shutters turn cyan, and cause the corresponding spectrum on the spectrum view screen to be highlighted. Note that the individual shutters in an MSA slitlet must be selected individually if you want to highlight all of the associated spectra.
 
 Click `Save...` and choose a filename to export a PNG image of the shutter display. This function does not work when the display is zoomed. Click `Back` to return to the spectrum view screen.
+
+.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/shutterview_screen.tiff
