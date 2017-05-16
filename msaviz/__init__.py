@@ -7,8 +7,11 @@ Created on Tue Jan 24 13:55:41 2017
 from __future__ import absolute_import
 
 
-from .main import WaveTool
+from .msaviz import WaveTool
 
 def run():
     """Entry point for the MSA Visualization Tool script."""
     WaveTool().run()
+    
+if __name__ == "__main__":
+    run()

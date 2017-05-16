@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov  1 14:42:15 2016
+Created on Tue May 16 12:37:06 2017
 
 @author: gkanarek
 """
-from __future__ import absolute_import, division, print_function
 
 import os
 
@@ -102,6 +101,6 @@ class WaveTool(App):
     def _get_fg(self):
         return '{}/{}'.format(self.filtname, self.gratname)
     fg = AliasProperty(_get_fg, None, bind=['filtname', 'gratname'])
-    
+
 if __name__ == "__main__":
     WaveTool().run()
