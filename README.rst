@@ -30,7 +30,7 @@ $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew
 $ pip install kivy
 
 *Mac:*
-To install the Kivy dependencies, you will need to have the `Homebrew package manager <https://brew.sh/>`_ installed. If you are trying to install this on a Mac owned by STScI, you will likely run into problems when attempting to install Homebrew. I have included the ``install_homebrew.sh`` script, to handle this task. Once you run the script, and follow the instructions at the end, simply do ``$ brew_activate`` in advance any time you activate the ``msaviz`` conda environment.
+To install the Kivy dependencies, you will need to have the `Homebrew package manager <https://brew.sh/>`_ installed. If you are trying to install this on a Mac owned by STScI, you will likely run into problems when attempting to install Homebrew. I have included the ``install_homebrew.sh`` script `here <https://github.com/gkanarek/msaviz/blob/master/install_homebrew.sh>`_, to handle this task. Once you run the script, and follow the instructions at the end, simply do ``$ brew_activate`` in advance any time you activate the ``msaviz`` conda environment.
 ::
 
 $ brew install pkg-config sdl2 sdl2_image sdl2_ttf sdl2_mixer

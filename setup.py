@@ -24,10 +24,10 @@ with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
 
 setup(
     name='msaviz',
-    version='1.0.1a7',
-    description='MSA spectral visualization tool',
+    version='1.0.1a8',
+    description='JWST-NIRSpec MSA spectral visualization tool',
     long_description=long_description,
-    url='', #need to post this on github
+    url='https://github.com/gkanarek/msaviz',
     author='Gray Kanarek',
     author_email='gkanarek@stsci.edu',
     classifiers=[
@@ -40,9 +40,6 @@ setup(
     packages=find_packages(),
     install_requires=required,
     include_package_data=True,
-    #package_data={
-    #    'msaviz': ['*.fits', '*.json', '*.zip', '*.csv']
-    #},
     entry_points={
         'gui_scripts': [
             'msaviz=msaviz:run',
