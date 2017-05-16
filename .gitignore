@@ -1,0 +1,10 @@
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~
+update_package_dist.sh
+.DS_Store

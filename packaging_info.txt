@@ -1,0 +1,4 @@
+OS X Packaging Command! Edit the version and any other things.
+
+python package_app.py /Users/gkanarek/Desktop/msaviz/msaviz/ --source-app=Kivy3.app --author="Graham Kanarek" --appname=MSAViz --icon=/Users/gkanarek/Desktop/msaviz/msaviz/data/nirspec.icns --displayname="MSA Spectral Visualization Tool" --bundleid=edu.stsci.msaviz --bundlename=msaviz --bundleversion=0.0.5 --deps=numpy,astropy,scipy --gardendeps=filebrowser --with-gstreamer=no
+
