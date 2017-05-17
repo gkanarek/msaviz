@@ -51,104 +51,6 @@ with open(range_file) as f:
 
 #The prism requires some special handling, and has its own dedicated file.
 
-
-class MSA(object):
-    """
-    The workhorse object for calculating pixel-to-wavelength mappings for each
-    filter/grating combination.
-    
-    Algorithmically, we determine an initial condition for a given shutter to
-    use as an anchor point, then integrate the dispersion curve of the grating
-    to map the rest of the pixels.
-    
-    Initial conditions are taken from (a) 2nd-degree, 2D polynomial fits to the
-    ETC detector gap reference files, for all but the prism; or (b) a look-up
-    table for the prism. 
-    
-    In addition, for the prism, a 3rd-degree, 1D polynomial correction is 
-    applied to the integrated dispersion solution, to reduce pixel errors 
-    (compared to the instrument model).
-    """
-    
-    def __init__(self, filtname, gratingname):
-        self.filter = filtname
-        self.grating = gratingname
-        self.sci_range = range_data["{}/{}".format(self.filter, self.grating)]
-        
-        dtable = fits.getdata(disp_files.format(self.grating),1)
-        dwav = dtable['WAVELENGTH']
-        dlds = dtable['DLDS']
-        
-        if self.grating == "prism":
-            self.quadrants = []
-            for q in range(1,5):
-                tab = Table.read(prism_file, q)
-                tab.add_index('I')
-                tab.add_index('J')
-                self.quadrants.append(tab)
-            self.dispersion = interp1d(dwav, dlds, fill_value='extrapolate')
-            self._eval = self._prism_evaluate
-        else:
-            self.quadrants = quadrant_data[(self.filter, self.grating)]
-            fitter = fitting.LinearLSQFitter()
-            self.dispersion = fitter(models.Polynomial1D(6), dwav, dlds)
-            self._eval = self._grating_evaluate
-    
-    def __call__(self, *arg):
-        return self._eval(*arg)
-    
-    def _prism_evaluate(self, quadrant, i, j, nrs):
-        """
-        The prism requires special handling; this function integrates the
-        dispersion curve just like the othrs, but then applies a 3rd-order
-        polynomial correction which has previously been fit.
-        """
-        data = self.quadrants[quadrant]
-        try:
-            d1 = data.loc['I', i+1]
-            row = d1.loc['J', j+1]
-        except KeyError as key:
-            return None
-        pix, wav, par = [row[_+"49{}".format(nrs+1)] for _ in ['PIX','WAV','PAR']]
-        
-        if ~np.isfinite(wav):
-            return None
-        
-        all_pix = np.arange(2048, dtype=float)
-        in_bounds = np.logical_and(all_pix >= pix[0], all_pix <= pix[1])
-        integrate_pixels = [pix[0]] + all_pix[in_bounds].tolist()
-        
-        base, dinfo = odeint(self._integrate_func, wav, integrate_pixels, 
-                             full_output=True)
-        correction = models.Polynomial1D(degree=3, c0=par[0], c1=par[1], 
-                                         c2=par[2], c3=par[3])(all_pix[in_bounds])
-        all_wav = np.zeros_like(all_pix)
-        all_wav[in_bounds] = base.squeeze()[1:] + correction
-        return all_wav
-    
-    def _integrate_func(self, y, x):
-        return self.dispersion(y)
-        
-    def _grating_integrate(self, x0, y0):
-        dx = [-1,1][x0 == 0]
-        outx = np.arange(2048, dtype=float)
-        outy, dinfo = odeint(self._integrate_func, y0, outx[::dx], full_output=True)
-        if outy.max() > 20:
-            import pdb; pdb.set_trace()
-        return outy[::dx]
-        
-    def _grating_evaluate(self, quadrant, i, j, nrs):
-        quadmodel = self.quadrants[quadrant]
-        p, t, c = [(quadmodel.pix1, quadmodel.type1, quadmodel.param1), 
-                   (quadmodel.pix2, quadmodel.type2, quadmodel.param2)][nrs]
-        if p is None:
-            return None
-        model = models.Polynomial2D(2)
-        model.parameters = c
-        wav = model(j,i)
-        return self._grating_integrate(p, wav).squeeze()
-
-
 def parse_msa_config(filename, return_all=False):
     """
     A function to read an MSA config file, which is a csv with values: 
@@ -188,74 +90,290 @@ def parse_msa_config(filename, return_all=False):
         return all_shutters
     return open_shutters
 
-def calculate_wavelengths(config_file, filtername, gratingname, outfile=None):
+
+class _MSA(object):
+    """
+    The workhorse object for calculating pixel-to-wavelength mappings for each
+    filter/grating combination.
+    
+    Algorithmically, we determine an initial condition for a given shutter to
+    use as an anchor point, then integrate the dispersion curve of the grating
+    to map the rest of the pixels.
+    
+    Initial conditions are taken from (a) 2nd-degree, 2D polynomial fits to the
+    ETC detector gap reference files, for all but the prism; or (b) a look-up
+    table for the prism. 
+    
+    In addition, for the prism, a 3rd-degree, 1D polynomial correction is 
+    applied to the integrated dispersion solution, to reduce pixel errors 
+    (compared to the instrument model).
+    """
+    
+    def __init__(self, filtname, gratingname):
+        self.filter = filtname
+        self.grating = gratingname
+        self.sci_range = range_data["{}/{}".format(self.filter, self.grating)]
+        
+        dtable = fits.getdata(disp_files.format(self.grating),1)
+        dwav = dtable['WAVELENGTH']
+        dlds = dtable['DLDS']
+        
+        if self.grating == "prism":
+            self.quadrants = []
+            for q in range(1,5):
+                tab = Table.read(prism_file, q)
+                tab.add_index('I')
+                tab.add_index('J')
+                self.quadrants.append(tab)
+            self.dispersion = interp1d(dwav, dlds, fill_value='extrapolate')
+            self._eval = self._prism_wrapper
+        else:
+            self.quadrants = quadrant_data[(self.filter, self.grating)]
+            fitter = fitting.LinearLSQFitter()
+            self.dispersion = fitter(models.Polynomial1D(6), dwav, dlds)
+            self._eval = self._grating_wrapper
+    
+    def __call__(self, *arg):
+        return self._eval(*arg)
+        
+    def _prism_wrapper(self, coords):
+        """
+        Unlike for the gratings, the prism is not integrated over the same set 
+        of pixels for each shutter. Therefore, we still need to integrate each
+        shutter individually.
+        """
+        ns = len(coords)
+        
+        #we'll leave 0s wherever the spectrum doesn't fall on the detector
+        output = np.zeros((2, ns, 2048), dtype=float)
+        
+        for idx,(q,c,r) in enumerate(coords):
+            for n in (0,1):
+                output[n,idx] = self._prism_evaluate(q,c,r,n)
+        
+        return output
+        
+    def _prism_evaluate(self, quadrant, i, j, nrs):
+        """
+        The prism requires special handling; this function integrates the
+        dispersion curve just like the othrs, but then applies a 3rd-order
+        polynomial correction which has previously been fit.
+        """
+        data = self.quadrants[quadrant]
+        try:
+            d1 = data.loc['I', i+1]
+            row = d1.loc['J', j+1]
+        except KeyError as key:
+            return None
+        pix, wav, par = [row[_+"49{}".format(nrs+1)] for _ in ['PIX','WAV','PAR']]
+        
+        if ~np.isfinite(wav):
+            return None
+        
+        all_pix = np.arange(2048, dtype=float)
+        in_bounds = np.logical_and(all_pix >= pix[0], all_pix <= pix[1])
+        integrate_pixels = [pix[0]] + all_pix[in_bounds].tolist()
+        
+        base, dinfo = odeint(self._integrate_func, wav, integrate_pixels, 
+                             full_output=True)
+        correction = models.Polynomial1D(degree=3, c0=par[0], c1=par[1], 
+                                         c2=par[2], c3=par[3])(all_pix[in_bounds])
+        all_wav = np.zeros_like(all_pix)
+        all_wav[in_bounds] = base.squeeze()[1:] + correction
+        return all_wav    
+    
+    def _integrate_func(self, y, x):
+        return self.dispersion(y)
+        
+    def _grating_integrate(self, pix0, params, i0, j0):
+        """
+        Perform the actual integration by way of scipy.integrate.odeint
+        """
+        dx = [-1,1][pix0 == 0] #integration direction
+        outx = np.arange(2048, dtype=float) #pixels at which to integrate
+        
+        #Wavelength IC
+        model = models.Polynomial2D(2)
+        model.parameters = params
+        wav = model(j0, i0)
+        
+        #integrate
+        outy, dinfo = odeint(self._integrate_func, wav, outx[::dx], 
+                             full_output=True)
+        return outy[::dx] #go back to pixels 0->2047
+    
+    def _grating_wrapper(self, coords):
+        """
+        We only have two possible paths of integration: left-to-right, and 
+        right-to-left. Using the magic of ODEINT, we can do each set of these
+        simultaneously, then combine the results.
+        """
+        
+        ns = coords.shape[1] #number of shutters we're checking
+        
+        #we'll leave 0s wherever the spectrum doesn't fall on the detector
+        output = np.zeros((2, ns, 2048), dtype=float)
+        
+        for q, quad in self.quadrants.items():
+            if q not in self.quadrants: #no shutters in this quadrant
+                continue
+            #which shutters are in this quadrant?
+            idx, = (coords[0] == q).nonzero()
+            
+            if quad.pix1 is not None: #include NRS1
+                output[0, idx] = self._grating_integrate(quad.pix1,
+                                                         quad.param1,
+                                                         coords[1,idx],
+                                                         coords[2,idx]).T
+            if quad.pix2 is not None:
+                output[1, idx] = self._grating_integrate(quad.pix2,
+                                                         quad.param2,
+                                                         coords[1,idx],
+                                                         coords[2,idx]).T
+        
+        return output
+
+class MSAConfig(object):
+    def __init__(self, filtername="", gratingname="", config_file=""):
+        self.msa = None
+        self.oidx = None
+        self._nrs = None
+        self._stu = None
+        self.shutter_limits = None
+        self.open_shutters = {}
+        self.conf = ""
+        self.fname = ""
+        self.gname = ""
+        
+        self.update_instrument(filtername, gratingname)
+        self.update_config(config_file)
+        
+    def update_config(self, config_file):
+        """
+        Parse an MSA config file and store the open shutters in a useful format
+        for calculations.
+        """
+        if not config_file:
+            return
+        self.conf = config_file
+        self.open_shutters = parse_msa_config(self.conf)
+        
+        qrc,s = zip(*sorted(self.open_shutters.items()))
+        self.quads, self.cols, self.rows = np.vstack(list(zip(*qrc)))
+        self.stuck = np.array(s)
+        self.opens = ~self.stuck
+        self.oidx, = self.opens.nonzero()
+        self.nopen = self.oidx.size
+        self._calculate()
+    
+    def update_instrument(self, filtername, gratingname):
+        """
+        Create the MSA integrator object.
+        """
+        if not filtername or not gratingname:
+            return
+        self.fname = filtername
+        self.gname = gratingname
+        
+        self.msa = _MSA(self.fname, self.gname)
+        self.sci_range = self.msa.sci_range
+        self._calculate()
+    
+    def wavelength(self, quadrants, rows, columns):
+        if not self.conf or not self.fname:
+            return None
+        return self.msa(np.vstack((quadrants, rows, columns)))
+        
+    def _calculate(self):
+        """
+        Calculate all the wavelengths and shutter limits based on the config
+        file and the filter + disperser choices.
+        """
+        self._nrs = np.zeros((2,2,171,2048), dtype=float)
+        self._stu = np.zeros((2,2,171,2048), dtype=float)
+        self.shutter_limits = None
+        
+        if not self.conf or not self.fname:
+            return
+        
+        o = self.opens
+        s = self.stuck
+        coords = np.vstack((self.quads, self.cols, self.rows))
+
+        lo, hi = self.sci_range
+        all_waves = self.msa(coords)
+        top = 1 - self.quads % 2
+        lims = np.full((self.nopen, 4), np.nan, dtype=float)
+        for n, waves in enumerate(all_waves):
+            wopen = waves[o]
+            wstuck = waves[s]
+            
+            self._stu[n, top[s], 170-coords[2,s]] = wstuck
+            self._nrs[n, top[o], 170-coords[2,o]] = wopen
+            
+            ok = np.logical_and(wopen.min(axis=1) <= hi,
+                                wopen.max(axis=1) >= lo)
+            lims[ok,   n*2] = np.maximum(wopen[ok].min(axis=1), lo)
+            lims[ok, 1+n*2] = np.minimum(wopen[ok].max(axis=1), hi)
+        self.shutter_limits = lims
+    
+    @property
+    def wavelength_table(self):
+        """
+        Return a QTable of wavelength limits.
+        """
+        limits = self.shutter_limits * u.micron
+        lo1, hi1, lo2, hi2 = limits.T
+        q, c, r = (self.quads[self.oidx] + 1, 
+                   self.cols[self.oidx] + 1, 
+                   self.rows[self.oidx] + 1)
+        
+        
+        shutters = QTable([q, c, r, lo1, hi1, lo2, hi2], names=["Quadrant", 
+                                                               "Column", "Row", 
+                                                               "NRS1-min",
+                                                               "NRS1-max", 
+                                                               "NRS2-min", 
+                                                               "NRS2-max"],
+                      meta={"MSA Config File":self.conf,
+                            "Open shutters": self.nopen,
+                            "Filter": self.fname,
+                            "Disperser": self.gname},
+                      masked=True, dtype=('i4','i4','i4','f8','f8','f8','f8'))
+        
+        shutters['NRS1-min'].info.format = '6.4f'
+        shutters['NRS1-max'].info.format = '6.4f'
+        shutters['NRS2-min'].info.format = '6.4f'
+        shutters['NRS2-max'].info.format = '6.4f'
+        
+        shutters['NRS1-min'].mask = ~np.isfinite(lo1)
+        shutters['NRS1-max'].mask = ~np.isfinite(hi1)
+        shutters['NRS2-min'].mask = ~np.isfinite(lo2)
+        shutters['NRS2-max'].mask = ~np.isfinite(hi2)
+        
+        return shutters
+    
+    def write_wavelength_table(self, outfile):
+        """
+        Write the wavelengths table to an ascii file.
+        """
+        with open(outfile, 'w') as f:
+            #print out the header
+            f.write("## MSA Config File: {}\n".format(self.conf))
+            f.write("## {} open shutters\n".format(self.nopen))
+            f.write("## Filter: {}\n".format(self.fname))
+            f.write("## Disperser: {}\n".format(self.gname))
+            f.write("\n")
+            self.wavelength_table.write(f, format='ascii.fixed_width_two_line')
+
+def wavelength_table(config_file, filtername, gratingname, outfile=None):
     """
     A utility to expose the wavelength table export functionality from the 
     spectrum view screen, without requiring the use of the GUI.
     """
     
-    open_shutters = parse_msa_config(config_file)
-    try:
-        msa = MSA(filtername, gratingname)
-    except KeyError:
-        print("Invalid filter/grating pair")
-        return
-    
-    lo, hi = msa.sci_range
-    shutter_limits = {}
-    
-    for (q, i, j), stuck in open_shutters.items():
-        if stuck:
-            continue
-        lim = [None] * 4
-        for n in range(2):
-            wave = msa(q,i,j,n)
-            if wave is None:
-                continue
-            if wave.min() <= hi and wave.max() >= lo:
-                lim[n*2:n*2+2] = [max(wave.min(), lo), 
-                                  min(wave.max(), hi)]
-            if not stuck:
-                shutter_limits[(q+1,i+1,j+1)] = lim
-    
-    q,i,j = zip(*sorted(shutter_limits.keys()))
-    nshutter = len(shutter_limits)
-    limits = np.zeros((nshutter, 4), dtype=float)
-    for row, qij in enumerate(zip(q,i,j)):
-        limits[row] = shutter_limits[qij]
-    limits = limits * u.micron
-    lo1, hi1, lo2, hi2 = limits.T
-    
-    shutters = QTable([q,i,j,lo1, hi1, lo2, hi2], names=["Quadrant", 
-                                                         "Column", "Row", 
-                                                         "NRS1-min",
-                                                         "NRS1-max", 
-                                                         "NRS2-min", 
-                                                         "NRS2-max"],
-                      meta={"MSA Config File":config_file,
-                            "Open shutters": len(shutter_limits),
-                            "Filter": filtername,
-                            "Grating": gratingname},
-                      masked=True, dtype=('i4','i4','i4','f8','f8','f8','f8'))
-        
-    shutters['NRS1-min'].info.format = '6.4f'
-    shutters['NRS1-max'].info.format = '6.4f'
-    shutters['NRS2-min'].info.format = '6.4f'
-    shutters['NRS2-max'].info.format = '6.4f'
-    
-    shutters['NRS1-min'].mask = ~np.isfinite(lo1)
-    shutters['NRS1-max'].mask = ~np.isfinite(hi1)
-    shutters['NRS2-min'].mask = ~np.isfinite(lo2)
-    shutters['NRS2-max'].mask = ~np.isfinite(hi2)
+    msaconf = MSAConfig(filtername, gratingname, config_file)
     
     if outfile:
-        with open(outfile, 'w') as f:
-            #print out the header
-            f.write("## MSA Config File: {}\n".format(config_file))
-            f.write("## {} open shutters\n".format(len(shutter_limits)))
-            f.write("## Filter: {}\n".format(filtername))
-            f.write("## Grating: {}\n".format(gratingname))
-            f.write("\n")
-            shutters.write(f, format='ascii.fixed_width_two_line')
-    
-    return shutters
+        msaconf.write_wavelength_table(outfile)
+    return msaconf.wavelength_table

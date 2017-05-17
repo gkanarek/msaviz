@@ -105,15 +105,15 @@ Builder.load_string("""
                 on_release: root.msa_parse()
                 canvas.before:
                     Color:
-                        rgba: not root.open_shutters, bool(root.open_shutters), 0, 1
+                        rgba: app.msa is None, app.msa is not None, 0, 1
                     Rectangle:
                         size: self.size
                         pos: self.pos
             Label:
-                text: "" if not root.open_shutters else "{} open shutters".format(len([x for x,y in root.open_shutters.items() if not y]))
+                text: "" if app.msa is None else "{} open shutters".format(app.msa.nopen)
                 canvas.before:
                     Color:
-                        rgba: not root.open_shutters, 0.6*bool(root.open_shutters), 0, 1
+                        rgba: app.msa is None, 0.6*bool(app.msa is not None), 0, 1
                     Rectangle:
                         size: self.size
                         pos: self.pos
@@ -133,7 +133,7 @@ Builder.load_string("""
 class InitScreen(Screen):
     fglist = ListProperty([])
     filt_grating = ListProperty([])
-    open_shutters = DictProperty({})
+    _msa_file = StringProperty('')
     msa_file = StringProperty('')
     filtname = StringProperty('')
     gratname = StringProperty('')
@@ -145,11 +145,11 @@ class InitScreen(Screen):
             popup = WarningPopup(text="Please select a filter & grating combination!")
             popup.open()
             return False
-        if not self.msa_file:
+        if not self._msa_file:
             popup = WarningPopup(text="Please choose an MSA config file!")
             popup.open()
             return False
-        if not self.open_shutters:
+        if not self.msa_file:
             popup = WarningPopup(text="Please parse the MSA config file!")
             popup.open()
             return False
@@ -174,9 +174,9 @@ class InitScreen(Screen):
     def set_msafile(self, instance):
         if instance.canceled:
             return
-        self.msa_file = os.path.join(instance.selected_path, 
-                                     instance.selected_file)
-        self.ids.msainput.text = self.msa_file
+        self._msa_file = os.path.join(instance.selected_path, 
+                                      instance.selected_file)
+        self.ids.msainput.text = self._msa_file
         return False
     
     def set_workingdir(self, instance):
@@ -187,17 +187,16 @@ class InitScreen(Screen):
         self.ids.workdirinput.text = self.workingdir
         return False
     
-    def on_msa_file(self, instance, value):
-        self.open_shutters = {}
+    def on__msa_file(self, instance, value):
         self.all_shutters = [{},{},{},{}]
     
     def msa_parse(self):
-        if not self.msa_file:
+        if not self._msa_file:
             popup = WarningPopup(text="Please choose an MSA config file (must be a csv file)!")
             popup.open()
             return
         try:
-            self.open_shutters = parse_msa_config(self.msa_file)
+            self.msa_file = self._msa_file
             alls = parse_msa_config(self.msa_file, return_all=True)
             tmp = [{}, {}, {}, {}]
             for q,i,j in alls:

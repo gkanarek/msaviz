@@ -217,7 +217,6 @@ class ShutterScreen(Screen):
     selected = ListProperty([])
     filtname = StringProperty('')
     gratname = StringProperty('')
-    
     recent_select = ListProperty([])
 
     def on_pre_enter(self):

@@ -10,19 +10,15 @@ from __future__ import absolute_import, division, print_function
 #horizontal MSA gap 22"
 #vertical MSA gap 36"
 
-from threading import Thread
-
 from kivy.lang import Builder
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.label import Label
 from kivy.graphics import InstructionGroup, Color, Rectangle
-from kivy.clock import Clock
 from kivy.properties import (ObjectProperty, NumericProperty, BooleanProperty,
                              DictProperty, ReferenceListProperty, AliasProperty,
                              ListProperty)
 
-from .widgets.popups import WaitPopup
 from .widgets.spectral import SpectralBase
 
 import numpy as np
@@ -207,7 +203,7 @@ class OutsideLabel(Label):
     
 
 class SpectrumLayout(FloatLayout):
-    msa = ObjectProperty(None, allownone=True) #MSA calculation object
+    msa = ObjectProperty(None, allownone=True) #MSA configuration object
     open_shutters = DictProperty({}) #Dictionary of open shutters
     waiting = ObjectProperty(None, allownone=True) #The Please Wait popup
     shutter_limits = DictProperty({}) #Tracking shutter limits for export
@@ -239,22 +235,17 @@ class SpectrumLayout(FloatLayout):
     aspect = AliasProperty(_get_aspect, None, bind=['size'])
     
     def on_open_shutters(self, instance, value):
-        self.wrapper()
+        self.update()
     
     def on_msa(self, instance, value):
-        self.wrapper()
+        self.update()
     
-    def wrapper(self):
-        if self.msa is None or not self.open_shutters:
+    def update(self):
+        if not self.msa:
             return
         self.sci_range = self.msa.sci_range
-        self.waiting = WaitPopup(num_shutters=len(self.open_shutters),
-                                 current_shutter = 0)
-        self.waiting.open()
-        
-        t = Thread(target=self.reset)
-        t.start()
-        #self.reset()
+        self.stu = self.msa._stu
+        self.nrs = self.msa._nrs
         
     def get_select_bounds(self, q, i, j):
         top = 1 - q % 2
@@ -314,57 +305,3 @@ class SpectrumLayout(FloatLayout):
                     self.selected_boxes[(q,i,j)] = group
                     self.canvas.after.add(group)
         self.canvas.ask_update()
-    
-    def reset(self):
-        """
-        Calculate the wavelength arrays. Any updates to the data arrays will 
-        propogate to their respective SpectralZone, thanks to the magic of 
-        Kivy properties).
-        """
-        #initialize arrays for spectra
-        #dimensions: NRS1 vs 2; top vs bottom; shutter row; pixel
-        nrs_tmp = np.zeros((2,2,171,2048), dtype=float)
-        stu_tmp = np.zeros((2,2,171,2048), dtype=float)
-        self.shutter_limits = {}
-        
-        #calculate each spectrum and put it in the appropriate place
-        for (q, i, j), stuck in self.open_shutters.items():
-            if self.waiting:
-                self.waiting.current_shutter += 1
-            top = 1 - q % 2
-            lim = [None] * 4
-            for n in range(2):
-                wave = self._get_shutter(q,i,j,n)
-                if wave is None:
-                    continue
-                if stuck:
-                    stu_tmp[n,top,170-j] = wave
-                else:
-                    nrs_tmp[n,top,170-j] = wave
-                    if wave.min() <= self.sci_max and wave.max() >=self.sci_min:
-                        lim[n*2:n*2+2] = [max(wave.min(), self.sci_min), 
-                                          min(wave.max(), self.sci_max)]
-            if not stuck:
-                self.shutter_limits[(q+1,i+1,j+1)] = lim
-        
-        Clock.schedule_once(lambda dt: self.proceed(stu_tmp, nrs_tmp), 0.1)
-    
-    def proceed(self, stu, nrs):
-        """
-        Dismiss the popup to unblock the app.
-        """
-        self.stu = stu
-        self.nrs = nrs
-        
-        if self.waiting:
-            self.waiting.dismiss()
-            self.waiting = None
-        
-        
-    def _get_shutter(self, q, i, j, n):
-        """
-        Calculate the data and display parameters for a given shutter.
-        """
-        if self.msa is None:
-            return
-        return self.msa(q,i,j,n)

@@ -6,16 +6,19 @@ Created on Tue May 16 12:37:06 2017
 """
 
 import os
+from threading import Thread
 
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import (ListProperty, NumericProperty, StringProperty,
-                             AliasProperty, DictProperty, ObjectProperty,
-                             BooleanProperty)
+                             AliasProperty, ObjectProperty, BooleanProperty)
 from kivy.core.window import Window
 from kivy.metrics import sp
+from kivy.clock import Clock
 
 from .screens import InitScreen, SpectrumScreen, ShutterScreen
+from .msa import MSAConfig
+from .widgets.popups import WaitPopup
 
 kv = """
 ScreenManager:
@@ -46,7 +49,7 @@ class WaveTool(App):
                                  ('f290lp', 'g395m')])
     fglist = ListProperty([])
     msa_file = StringProperty('')
-    open_shutters = DictProperty({})
+    #open_shutters = DictProperty({})
     all_shutters = ListProperty([{},{},{},{}])
     update_shutters = BooleanProperty(False)
     filtname = StringProperty('')
@@ -55,6 +58,40 @@ class WaveTool(App):
     labelsize = NumericProperty(sp(30))
     sm = ObjectProperty(None)
     selected_shutters = ListProperty([[],[],[],[]])
+    msa = ObjectProperty(None, allownone=True)
+    waiting = ObjectProperty(None, allownone=True)
+    
+    def on_msa_file(self, instance, value):
+        self.wrapper()
+    
+    def on_fg(self, instance, value):
+        self.wrapper()
+        
+    def wrapper(self):
+        if not self.msa_file or not self.filtname or not self.gratname:
+            return
+        
+        self.waiting = WaitPopup(num_shutters=0,
+                                 current_shutter = 0)
+        self.waiting.open()
+        
+        t = Thread(target=self.init_msa)
+        t.start()
+    
+    def init_msa(self):
+        msa = MSAConfig(self.filtname, self.gratname, self.msa_file)
+        Clock.schedule_once(lambda dt: self.proceed(msa), 0.1)
+    
+    def proceed(self, msa):
+        """
+        Dismiss the popup to unblock the app.
+        """
+        self.msa = msa
+        
+        if self.waiting:
+            self.waiting.dismiss()
+            self.waiting = None
+        
     
     def build(self):
         self.title = "MSA Spectral Visualization Tool"
@@ -68,7 +105,7 @@ class WaveTool(App):
             traceback.print_exc()
             pdb.post_mortem(tb)
         self.sm.ids.initscreen.bind(msa_file=self.setter('msa_file'),
-                                    open_shutters=self.setter('open_shutters'),
+                                    #open_shutters=self.setter('open_shutters'),
                                     filtname=self.setter('filtname'),
                                     gratname=self.setter('gratname'),
                                     all_shutters=self.setter('all_shutters'),

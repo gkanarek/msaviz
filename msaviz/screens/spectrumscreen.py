@@ -8,11 +8,6 @@ Created on Wed Jan 25 10:07:00 2017
 from __future__ import absolute_import, division, print_function
 
 import os
-
-import numpy as np
-from astropy.table import QTable
-import astropy.units as u
-
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -21,7 +16,6 @@ from kivy.properties import (AliasProperty, StringProperty, ListProperty,
                              NumericProperty, ReferenceListProperty,
                              ObjectProperty)
 
-from ..msa import MSA
 from ..widgets.popups import MSAFilePopup
 from ..widgets.spectral import SpectralBase
 from ..widgets import FloatStencil, LockScatter
@@ -74,6 +68,7 @@ Builder.load_string("""#:import os os
     filtname: app.filtname
     gratname: app.gratname
     msafile: os.path.basename(app.msa_file)
+    msa: app.msa
     filt_grating: app.filt_grating
     BoxLayout:
         orientation: 'vertical'
@@ -84,7 +79,7 @@ Builder.load_string("""#:import os os
                 SpectrumLayout:
                     id: detector
                     size_hint: 1., 1.
-                    open_shutters: app.open_shutters
+                    #open_shutters: app.msa.open_shutters
                     msa: root.msa
         Colorbar:
             msa: root.msa
@@ -155,13 +150,7 @@ class SpectrumScreen(Screen):
     gratname = StringProperty('')
     msafile = StringProperty('')
     filt_grating = ListProperty([])
-    
-    def _get_msa(self):
-        if (self.filtname, self.gratname) not in self.filt_grating:
-            return None
-        return MSA(self.filtname, self.gratname)
-    
-    msa = AliasProperty(_get_msa, None, bind=['filtname','gratname'])
+    msa = ObjectProperty(None, allownone=True)
     
     def on_pre_enter(self):
         self.ids.dpane.transform_with_touch(False)
@@ -199,45 +188,7 @@ class SpectrumScreen(Screen):
         if instance.canceled:
             return
         txt_out = os.path.join(instance.selected_path, instance.selected_file)
-        shutter_limits = self.ids.detector.shutter_limits
-        q,i,j = zip(*sorted(shutter_limits.keys()))
-        nshutter = len(shutter_limits)
-        limits = np.zeros((nshutter, 4), dtype=float)
-        for row, qij in enumerate(zip(q,i,j)):
-            limits[row] = shutter_limits[qij]
-        limits = limits * u.micron
-        lo1, hi1, lo2, hi2 = limits.T
-        
-        shutters = QTable([q,i,j,lo1, hi1, lo2, hi2], names=["Quadrant", 
-                                                             "Column", "Row", 
-                                                             "NRS1-min",
-                                                             "NRS1-max", 
-                                                             "NRS2-min", 
-                                                             "NRS2-max"],
-                          meta={"MSA Config File":self.msafile,
-                                "Open shutters": len(shutter_limits),
-                                "Filter": self.filtname,
-                                "Grating": self.gratname},
-                          masked=True, dtype=('i4','i4','i4','f8','f8','f8','f8'))
-            
-        shutters['NRS1-min'].info.format = '6.4f'
-        shutters['NRS1-max'].info.format = '6.4f'
-        shutters['NRS2-min'].info.format = '6.4f'
-        shutters['NRS2-max'].info.format = '6.4f'
-        
-        shutters['NRS1-min'].mask = ~np.isfinite(lo1)
-        shutters['NRS1-max'].mask = ~np.isfinite(hi1)
-        shutters['NRS2-min'].mask = ~np.isfinite(lo2)
-        shutters['NRS2-max'].mask = ~np.isfinite(hi2)
-        
-        with open(txt_out, 'w') as f:
-            #print out the header
-            f.write("## MSA Config File: {}\n".format(self.msafile))
-            f.write("## {} open shutters\n".format(len(shutter_limits)))
-            f.write("## Filter: {}\n".format(self.filtname))
-            f.write("## Grating: {}\n".format(self.gratname))
-            f.write("\n")
-            shutters.write(f, format='ascii.fixed_width_two_line')
+        self.msa.write_wavelength_table(txt_out)
         
     
     def save_png(self, instance):

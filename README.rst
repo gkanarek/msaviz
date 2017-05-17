@@ -91,26 +91,26 @@ Programmatic API
 The MSAViz package exposes an object and two functions to be used from the python command line, or from other python scripts. They can be imported like so:
 ::
 
->>> from msaviz import MSA, calculate_wavelengths, parse_msa_config
+>>> from msaviz import MSAConfig, calculate_wavelengths, parse_msa_config
 
-The ``MSA`` class provides a direct interface for predicting the wavelengths which will fall on each detector for a given shutter. Once it has been instantiated with paired filter and grating name strings, it can be called with the Quadrant, Row, and Column coordinates and an NRS number. *Note that these are 0-based indexing, so you must subtract 1 from the usual coordinates and NRS number.* ::
+The ``MSAConfig`` class provides a direct interface for predicting the wavelengths which will fall on each detector for a given shutter. Instantiate with paired filter and disperser name strings, as well as the path to an MSA config file (a .csv file exported from APT). The filter & disperser can be changed with ``MSAConfig.update_instrument()``, and the config file can be changed with ``MSAConfig.update_config()``.
 
-    >>> msa = MSA('f070lp', 'g140h')
-    >>> wavelengths = msa(0, 174, 15, 1) # Quadrant 1, Column 175, Row 16, NRS2
+- The ``MSAConfig.wavelength()`` method accepts one or more Quadrant, Row, and Column coordinates, and returns a numpy array of wavelength values at each pixel on each detector. *Note that these are 0-based indexing, so you must subtract 1 from the usual coordinates and NRS number.* 
+- The ``MSAConfig.wavelength_table`` property returns an ``astropy.table.QTable`` instance containing the wavelength ranges for each shutter on each detector.
+-- The ``MSAConfig.write_wavelength_table()`` method writes the above table to an ascii file.
+
+::
+
+    >>> msa = MSAConfig('f070lp', 'g140h', 'msa_config1.csv')
+    >>> wavelengths = msa.wavelength(0, 174, 15) # Quadrant 1, Column 175, Row 16
     >>> wavelengths.shape
-    (2048,)
+    (2, 1, 2048)
+    >>> msa.write_wavelength_table('msa_config_table.txt')
 
 
-The ``calculate_wavelengths`` function replicates the Export function of the spectrum view screen, returning an ``astropy.table.QTable`` with the wavelength bounds on each detector for each open shutter. ::
+If the full functionality of the ``MSAConfig`` class isn't required, the ``calculate_wavelengths`` function accepts a ``config_file``, ``filter_name``, and ``grating_name``, and returns the wavelength table as described above, and optionally writes the table to a given file. ::
 
     >>> wavelength_table = calculate_wavelengths('msa_config1.csv', 'f170lp', 'g235m', outfile='msa_config1_f170lp_g235m_wave.txt')
-
-This function accepts three positional arguments and one optional keyword argument: 
-
-- ``config_file``, the path to an MSA config file (string)
-- ``filtername``, the name of one of the NIRSpec filters (string)
-- ``gratingname``, the name of one of the NIRSpec gratings, which must be paired with the given filter (string)
-- ``outfile``, the path to an output file where the resulting table will be written (string, optional)
 
 Finally, ``parse_msa_config`` is a utility function which parses an MSA config file and returns a dictionary of shutter coordinates and status. By default, only open and stuck-open shutters are included, and the status is a boolean value (True if the shutter is stuck-open, False if it is simply open); however, by setting ``return_all=True``, the function returns a dictionary of every shutter in the MSA, and the status is a single character code ('x' is inactive, 's' is stuck-open, '1' is open, and '0' is closed). ::
 
