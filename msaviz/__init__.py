@@ -7,9 +7,9 @@ Created on Tue Jan 24 13:55:41 2017
 from __future__ import absolute_import
 
 
-from .msa import parse_msa_config, MSAConfig
+from .msa import parse_msa_config, MSAConfig, wavelength_table
 
-__all__ = ['run', 'MSAConfig', 'parse_msa_config']
+__all__ = ['run', 'MSAConfig', 'parse_msa_config', 'wavelength_table']
 
 def run():
     """Entry point for the MSA Visualization Tool script."""
