@@ -101,7 +101,7 @@ The ``MSA`` class provides a direct interface for predicting the wavelengths whi
 
 The ``calculate_wavelengths`` function replicates the Export function of the spectrum view screen, returning an ``astropy.table.QTable`` with the wavelength bounds on each detector for each open shutter. ::
 
-    >>> wavelength_table = calculate_wavelengths('msa_config1.csv', 'f170lp', 'g235m',       outfile='msa_config1_f170lp_g235m_wave.txt')
+    >>> wavelength_table = calculate_wavelengths('msa_config1.csv', 'f170lp', 'g235m', outfile='msa_config1_f170lp_g235m_wave.txt')
 
 This function accepts three positional arguments and one optional keyword argument: 
 
