@@ -24,7 +24,7 @@ with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
 
 setup(
     name='msaviz',
-    version='1.0.1a12',
+    version='1.0.1a14',
     description='JWST-NIRSpec MSA spectral visualization tool',
     long_description=long_description,
     url='https://github.com/gkanarek/msaviz',

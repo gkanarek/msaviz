@@ -55,8 +55,8 @@ When the interface has opened, complete the following steps on the file select s
 1. Choose a working directory (the included ``test/`` directory is the default).
 2. Select a filter & grating combination using the dropdown.
 3. Choose an MSA config file which has been exported from APT.
-4. Press `Parse` and wait while the MSA config file is parsed and the wavelengths are calculated.
-5. Once this is complete, press `Show the Spectrum Display!` to view the visualization.
+4. Press ``Parse`` and wait while the MSA config file is parsed and the wavelengths are calculated.
+5. Once this is complete, press ``Show the Spectrum Display!`` to view the visualization.
 
 .. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/fileselect_screen.png
 
@@ -66,11 +66,11 @@ On the spectrum view screen, the spectrum from each shutter is displayed on a re
 
 To zoom & pan the display, simulate a multi-touch with a right-click (which will leave a small red dot on the screen, which is the focus point for zooming), then click and drag to increase or decrease zoom. After zooming in, click and drag to pan in any direction. You can zoom back out with the same method as zooming in.
 
-Click `Export...` and choose a filename to export an ascii table showing the open shutters and their wavelength bounds on each detector (including the predicted lost wavelengths due to the detector gap).
+Click ``Export...`` and choose a filename to export an ascii table showing the open shutters and their wavelength bounds on each detector (including the predicted lost wavelengths due to the detector gap).
 
-Click `Save...` and choose a filename to export a PNG image of the spectrum display. This function does not work when the display is zoomed.
+Click ``Save...`` and choose a filename to export a PNG image of the spectrum display. This function does not work when the display is zoomed.
 
-Click `Shutters...` to move to the shutter view Screen (see below), or `Back` to return to the file select Screen.
+Click ``Shutters...`` to move to the shutter view Screen (see below), or ``Back`` to return to the file select Screen.
 
 .. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/spectrumview_screen.png
 
@@ -80,7 +80,9 @@ On the shutter view screen, a map of the four MSA quadrants is shown, indicating
 
 Click on any open shutter to select or deselect it; selected shutters turn cyan, and cause the corresponding spectrum on the spectrum view screen to be highlighted. Note that the individual shutters in an MSA slitlet must be selected individually if you want to highlight all of the associated spectra.
 
-Click `Save...` and choose a filename to export a PNG image of the shutter display. This function does not work when the display is zoomed. Click `Back` to return to the spectrum view screen.
+Click ``Find...`` to enter a set of shutter coordinates (with the option to select from a dropdown of all shutters which are currently selected shutters), and then automatically zoom and pan to center on the chosen shutter.
+
+Click ``Save...`` and choose a filename to export a PNG image of the shutter display. This function does not work when the display is zoomed. Click ``Back`` to return to the spectrum view screen.
 
 .. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/shutterview_screen.png
 
