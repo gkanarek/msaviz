@@ -97,7 +97,7 @@ The ``MSAConfig`` class provides a direct interface for predicting the wavelengt
 
 - The ``MSAConfig.wavelength()`` method accepts one or more Quadrant, Row, and Column coordinates, and returns a numpy array of wavelength values at each pixel on each detector. *Note that these are 0-based indexing, so you must subtract 1 from the usual coordinates and NRS number.* 
 - The ``MSAConfig.wavelength_table`` property returns an ``astropy.table.QTable`` instance containing the wavelength ranges for each shutter on each detector.
--- The ``MSAConfig.write_wavelength_table()`` method writes the above table to an ascii file.
+- The ``MSAConfig.write_wavelength_table()`` method writes the above table to an ascii file.
 
 ::
 
