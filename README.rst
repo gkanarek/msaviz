@@ -89,3 +89,65 @@ Click on any open shutter to select or deselect it; selected shutters turn cyan,
 Click `Save...` and choose a filename to export a PNG image of the shutter display. This function does not work when the display is zoomed. Click `Back` to return to the spectrum view screen.
 
 .. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/shutterview_screen.png
+
+Programmatic API
+----------------
+The MSAViz package exposes an object and two functions to be used from the python command line, or from other python scripts. They can be imported like so:
+::
+
+>>> from msaviz import MSA, calculate_wavelengths, parse_msa_config
+
+The `MSA` class provides a direct interface for predicting the wavelengths which will fall on each detector for a given shutter. Once it has been instantiated with paired filter and grating name strings, it can be called with the Quadrant, Row, and Column coordinates and an NRS number. *Note that these are 0-based indexing, so you must subtract 1 from the usual coordinates and NRS number.*
+::
+
+>>> msa = MSA('f070lp', 'g140h')
+>>> wavelengths = msa(0, 174, 15, 1) # Quadrant 1, Column 175, Row 16, NRS2
+>>> wavelengths.shape
+(2048,)
+
+
+The `calculate_wavelengths` function replicates the Export function of the spectrum view screen, returning an `astropy.table.QTable` with the wavelength bounds on each detector for each open shutter.
+::
+
+>>> wavelength_table = calculate_wavelengths('msa_config1.csv', 'f170lp', 'g235m', outfile='msa_config1_f170lp_g235m_wave.txt')
+
+This function accepts three positional arguments and one optional keyword argument: 
+
+- ``config_file``, the path to an MSA config file (string)
+- ``filtername``, the name of one of the NIRSpec filters (string)
+- ``gratingname``, the name of one of the NIRSpec gratings, which must be paired with the given filter (string)
+- ``outfile``, the path to an output file where the resulting table will be written (string, optional)
+
+Finally, `parse_msa_config` is a utility function which parses an MSA config file and returns a dictionary of shutter coordinates and status. By default, only open and stuck-open shutters are included, and the status is a boolean value (True if the shutter is stuck-open, False if it is simply open); however, by setting `return_all=True`, the function returns a dictionary of every shutter in the MSA, and the status is a single character code ('x' is inactive, 's' is stuck-open, '1' is open, and '0' is closed).
+::
+
+>>> for (q,i,j), stuck in parse_msa_config('msaviz/test/single_shutter.csv').items():
+...     print('Q {}, I {}, J {} - {}'.format(q+1, i+1, j+1, stuck))
+... 
+Q 3, I 240, J 61 - True
+Q 1, I 177, J 121 - True
+Q 1, I 35, J 30 - False
+Q 3, I 328, J 132 - True
+Q 2, I 244, J 46 - True
+Q 1, I 176, J 121 - True
+Q 2, I 53, J 43 - True
+Q 3, I 242, J 69 - True
+Q 3, I 44, J 155 - True
+Q 2, I 196, J 50 - True
+Q 2, I 27, J 94 - True
+Q 3, I 331, J 104 - True
+Q 3, I 144, J 42 - True
+Q 1, I 105, J 169 - True
+Q 1, I 104, J 169 - True
+Q 1, I 175, J 121 - True
+Q 1, I 38, J 25 - True
+Q 2, I 235, J 40 - True
+Q 2, I 321, J 117 - True
+Q 2, I 26, J 94 - True
+Q 3, I 307, J 139 - True
+Q 3, I 330, J 35 - True
+Q 4, I 351, J 156 - True
+
+
+
+ 

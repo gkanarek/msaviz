@@ -5,7 +5,7 @@ Created on Tue Nov  8 10:01:31 2016
 @author: gkanarek
 """
 
-from __future__ import absolute_import, division, print_function#, unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import json
 from collections import namedtuple
@@ -13,9 +13,10 @@ import csv
 import os
 
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, QTable
 from scipy.integrate import odeint
 from astropy.modeling import models, fitting
+import astropy.units as u
 from scipy.interpolate import interp1d
 import numpy as np
 
@@ -97,6 +98,11 @@ class MSA(object):
         return self._eval(*arg)
     
     def _prism_evaluate(self, quadrant, i, j, nrs):
+        """
+        The prism requires special handling; this function integrates the
+        dispersion curve just like the othrs, but then applies a 3rd-order
+        polynomial correction which has previously been fit.
+        """
         data = self.quadrants[quadrant]
         try:
             d1 = data.loc['I', i+1]
@@ -112,7 +118,7 @@ class MSA(object):
         in_bounds = np.logical_and(all_pix >= pix[0], all_pix <= pix[1])
         integrate_pixels = [pix[0]] + all_pix[in_bounds].tolist()
         
-        base, dinfo = odeint(self.func, wav, integrate_pixels, 
+        base, dinfo = odeint(self._integrate_func, wav, integrate_pixels, 
                              full_output=True)
         correction = models.Polynomial1D(degree=3, c0=par[0], c1=par[1], 
                                          c2=par[2], c3=par[3])(all_pix[in_bounds])
@@ -120,13 +126,13 @@ class MSA(object):
         all_wav[in_bounds] = base.squeeze()[1:] + correction
         return all_wav
     
-    def func(self, y, x):
+    def _integrate_func(self, y, x):
         return self.dispersion(y)
         
     def _grating_integrate(self, x0, y0):
         dx = [-1,1][x0 == 0]
         outx = np.arange(2048, dtype=float)
-        outy, dinfo = odeint(self.func, y0, outx[::dx], full_output=True)
+        outy, dinfo = odeint(self._integrate_func, y0, outx[::dx], full_output=True)
         if outy.max() > 20:
             import pdb; pdb.set_trace()
         return outy[::dx]
@@ -143,7 +149,7 @@ class MSA(object):
         return self._grating_integrate(p, wav).squeeze()
 
 
-def parse_msa_config(filename, return_all = False):
+def parse_msa_config(filename, return_all=False):
     """
     A function to read an MSA config file, which is a csv with values: 
         'x' (inactive), 0 (open), 1 (closed), 's' (stuck open)
@@ -181,3 +187,75 @@ def parse_msa_config(filename, return_all = False):
     if return_all:
         return all_shutters
     return open_shutters
+
+def calculate_wavelengths(config_file, filtername, gratingname, outfile=None):
+    """
+    A utility to expose the wavelength table export functionality from the 
+    spectrum view screen, without requiring the use of the GUI.
+    """
+    
+    open_shutters = parse_msa_config(config_file)
+    try:
+        msa = MSA(filtername, gratingname)
+    except KeyError:
+        print("Invalid filter/grating pair")
+        return
+    
+    lo, hi = msa.sci_range
+    shutter_limits = {}
+    
+    for (q, i, j), stuck in open_shutters.items():
+        if stuck:
+            continue
+        lim = [None] * 4
+        for n in range(2):
+            wave = msa(q,i,j,n)
+            if wave is None:
+                continue
+            if wave.min() <= hi and wave.max() >= lo:
+                lim[n*2:n*2+2] = [max(wave.min(), lo), 
+                                  min(wave.max(), hi)]
+            if not stuck:
+                shutter_limits[(q+1,i+1,j+1)] = lim
+    
+    q,i,j = zip(*sorted(shutter_limits.keys()))
+    nshutter = len(shutter_limits)
+    limits = np.zeros((nshutter, 4), dtype=float)
+    for row, qij in enumerate(zip(q,i,j)):
+        limits[row] = shutter_limits[qij]
+    limits = limits * u.micron
+    lo1, hi1, lo2, hi2 = limits.T
+    
+    shutters = QTable([q,i,j,lo1, hi1, lo2, hi2], names=["Quadrant", 
+                                                         "Column", "Row", 
+                                                         "NRS1-min",
+                                                         "NRS1-max", 
+                                                         "NRS2-min", 
+                                                         "NRS2-max"],
+                      meta={"MSA Config File":config_file,
+                            "Open shutters": len(shutter_limits),
+                            "Filter": filtername,
+                            "Grating": gratingname},
+                      masked=True, dtype=('i4','i4','i4','f8','f8','f8','f8'))
+        
+    shutters['NRS1-min'].info.format = '6.4f'
+    shutters['NRS1-max'].info.format = '6.4f'
+    shutters['NRS2-min'].info.format = '6.4f'
+    shutters['NRS2-max'].info.format = '6.4f'
+    
+    shutters['NRS1-min'].mask = ~np.isfinite(lo1)
+    shutters['NRS1-max'].mask = ~np.isfinite(hi1)
+    shutters['NRS2-min'].mask = ~np.isfinite(lo2)
+    shutters['NRS2-max'].mask = ~np.isfinite(hi2)
+    
+    if outfile:
+        with open(outfile, 'w') as f:
+            #print out the header
+            f.write("## MSA Config File: {}\n".format(config_file))
+            f.write("## {} open shutters\n".format(len(shutter_limits)))
+            f.write("## Filter: {}\n".format(filtername))
+            f.write("## Grating: {}\n".format(gratingname))
+            f.write("\n")
+            shutters.write(f, format='ascii.fixed_width_two_line')
+    
+    return shutters
