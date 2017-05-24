@@ -32,7 +32,7 @@ ln -s "$HOME/$NEW_BREW_PREFIX/homebrew/share/man/man1/brew.1" \
 
 export PATH="$HOME/$NEW_BREW_PREFIX/bin:$PATH"
 
-
+brew update
 
 echo "
 export _old_PATH=\"\$PATH\"
@@ -51,7 +51,7 @@ echo "***** Install complete *****"
 echo
 echo "It is recommended to add the following aliases to your ~/.bash_profile:
 
-alias brew_activate \"source $HOME/$NEW_BREW_PREFIX/bin/brew_activate.sh\"
-alias brew_deactivate \"source $HOME/$NEW_BREW_PREFIX/bin/brew_deactivate.sh\"
+alias brew_activate=\"source $HOME/$NEW_BREW_PREFIX/bin/brew_activate.sh\"
+alias brew_deactivate=\"source $HOME/$NEW_BREW_PREFIX/bin/brew_deactivate.sh\"
 
-Then, open a new shell. Type 'brew_activate' to add Homebrew to the path, along with everything installed through it."
+Then, open a new shell. Type \"brew_activate\" to add Homebrew to the path, along with everything installed through it."

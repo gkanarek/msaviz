@@ -10,3 +10,4 @@ update_package_dist.sh
 .DS_Store
 packaging_info.txt
 blacklist.txt
+.ipynb*

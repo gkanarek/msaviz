@@ -12,38 +12,47 @@ It is strongly recommended to use MSAViz in conjunction with the `Anaconda Pytho
 
 NOTE: these instructions have not been tested on Windows.
 
-**Step 1: Create a new conda environment.**::
+**Step 1: Create a new conda environment.**
+::
 
     $ conda create --name msaviz pip numpy scipy astropy cython
     $ source activate msaviz
 
 You can specify a particular python version when creating the conda environment with ``python=2`` or ``python=3`` or something similar; otherwise, it will default to the python version of your Anaconda distribution.
 
+If you prefer to use msaviz in an existing conda environment (which already has the dependencies installed), feel free to do so. Just skip the ``conda create`` line, and then  ``$ source activate <your_environment>`` instead of ``$ source activate msaviz``.
+
 **Step 2: Install Kivy and its dependencies.**
 
-*Windows:*::
+*Windows:*
+::
 
     $ conda install docutils pygments
     $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew
     $ pip install kivy
 
 *Mac:*
-To install the Kivy dependencies, you will need to have the `Homebrew package manager <https://brew.sh/>`_ installed. If you are trying to install this on a Mac owned by STScI, you will likely run into problems when attempting to install Homebrew. I have included the ``install_homebrew.sh`` script `here <https://github.com/gkanarek/msaviz/blob/master/install_homebrew.sh>`_, to handle this task. Once you run the script, and follow the instructions at the end, simply do ``$ brew_activate`` in advance any time you activate the ``msaviz`` conda environment.::
+
+To install the Kivy dependencies, you will need to have the `Homebrew package manager <https://brew.sh/>`_ installed. If you are trying to install this on a Mac owned by STScI, you will likely run into problems when attempting to install Homebrew. I have included the ``install_homebrew.sh`` script `here <https://github.com/gkanarek/msaviz/blob/master/install_homebrew.sh>`_, to handle this task. Once you run the script, and follow the instructions at the end, simply do ``$ brew_activate`` in advance any time you activate your conda environment.
+::
 
     $ brew install pkg-config sdl2 sdl2_image sdl2_ttf sdl2_mixer
     $ USE_OSX_FRAMEWORKS=0 pip install -I --no-cache-dir --no-binary all kivy
 
-**Step 3: Install MSAViz.**::
+**Step 3: Install MSAViz.**
+::
 
     $ pip install msaviz
 
-If you're viewing this on testpypi.python.org, try this instead: ::
+If you're viewing this on testpypi.python.org, try this instead:
+::
 
     $ pip install -i https://testpypi.python.org/pypi msaviz
 
 Quickstart Guide
 ----------------
-To begin using MSAViz, start the conda environment (if on an STScI Mac, see above) and run the package: ::
+To begin using MSAViz, start the conda environment (if on an STScI Mac, see above) and run the package:
+::
 
     $ source activate msaviz
     $ msaviz
