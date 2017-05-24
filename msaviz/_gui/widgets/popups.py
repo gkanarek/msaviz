@@ -151,10 +151,10 @@ Builder.load_string("""#:import os os
     auto_dismiss: False
     FileBrowser:
         id: fbrowser
-        path: os.path.join(app.homedir, 'test')
+        path: os.path.join(app.homedir, '..', 'test')
         on_success: root.select()
         on_canceled: root.cancel()
-        dir_select: True
+        dirselect: True
         filters: [root.isdir]
 
 <WaitPopup>:
@@ -166,7 +166,7 @@ Builder.load_string("""#:import os os
         Image:
             size_hint_y: None
             height: 0.5*self.width
-            source: os.path.join(app.homedir, 'data','prism.zip')
+            source: os.path.join(app.homedir,'..','data','prism.zip')
             anim_delay: 0.05
             allow_stretch: True
             id: prism

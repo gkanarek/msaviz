@@ -17,7 +17,7 @@ from kivy.metrics import sp
 from kivy.clock import Clock
 
 from .screens import InitScreen, SpectrumScreen, ShutterScreen
-from .msa import MSAConfig
+from ..msa import MSAConfig
 from .widgets.popups import WaitPopup
 
 kv = """
@@ -37,8 +37,9 @@ home_dir = os.path.dirname(os.path.realpath(__file__))
 
 class WaveTool(App):
     homedir = StringProperty(home_dir)
-    working_dir = StringProperty(os.path.join(home_dir, 'test'))
-    filt_grating = ListProperty([('clear', 'prism'), #--> prism not supported yet
+    working_dir = StringProperty(os.path.realpath(os.path.join(home_dir, 
+                                                              '..', 'test')))
+    filt_grating = ListProperty([('clear', 'prism'),
                                  ('f070lp', 'g140h'),
                                  ('f070lp', 'g140m'),
                                  ('f100lp', 'g140h'),
@@ -49,7 +50,6 @@ class WaveTool(App):
                                  ('f290lp', 'g395m')])
     fglist = ListProperty([])
     msa_file = StringProperty('')
-    #open_shutters = DictProperty({})
     all_shutters = ListProperty([{},{},{},{}])
     update_shutters = BooleanProperty(False)
     filtname = StringProperty('')
@@ -95,7 +95,7 @@ class WaveTool(App):
     
     def build(self):
         self.title = "MSA Spectral Visualization Tool"
-        self.icon = os.path.join('data', 'nirspec.png')
+        self.icon = os.path.join(home_dir, '..', 'data', 'nirspec.png')
         self.fglist = ["{}/{}".format(f,g) for f,g in self.filt_grating]
         import pdb, traceback, sys
         try:

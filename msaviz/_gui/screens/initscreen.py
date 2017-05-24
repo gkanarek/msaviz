@@ -12,7 +12,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 from kivy.properties import (ListProperty, DictProperty, StringProperty)
 
-from ..msa import parse_msa_config
+from ...msa import parse_msa_config
 from ..widgets.popups import WarningPopup, MSAFilePopup, WorkDirPopup
 
 Builder.load_string("""
@@ -197,7 +197,7 @@ class InitScreen(Screen):
             return
         try:
             self.msa_file = self._msa_file
-            alls = parse_msa_config(self.msa_file, return_all=True)
+            alls = parse_msa_config(self.msa_file, open_only=False)
             tmp = [{}, {}, {}, {}]
             for q,i,j in alls:
                 tmp[q][(i,j)] = alls[(q,i,j)]
