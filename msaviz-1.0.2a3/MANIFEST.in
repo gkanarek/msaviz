@@ -1,0 +1,4 @@
+include setup.py MANIFEST.in LICENSE.txt requirements.txt
+recursive-include msaviz/data *
+recursive-include msaviz/test *
+recursive-include msaviz/libs *

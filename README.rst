@@ -30,6 +30,7 @@ If you prefer to use msaviz in an existing conda environment (which already has 
     $ conda install docutils pygments
     $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew
     $ pip install kivy
+    $ garden install filebrowser
 
 *Mac:*
 
@@ -38,6 +39,7 @@ To install the Kivy dependencies, you will need to have the `Homebrew package ma
 
     $ brew install pkg-config sdl2 sdl2_image sdl2_ttf sdl2_mixer
     $ USE_OSX_FRAMEWORKS=0 pip install -I --no-cache-dir --no-binary all kivy
+    $ garden install filebrowser
 
 **Step 3: Install MSAViz.**
 ::
