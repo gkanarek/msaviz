@@ -153,7 +153,7 @@ Similarly, the ``check_wavelengths`` function accepts a list of target wavelengt
 
     >>> flag_table = check_wavelengths([1.22, 1.84, -19, 1000], 'msa_config1.csv', 'f170lp', 'g235m', outfile='msa_config1_f170lp_g235m_flags.txt')
 
-Finally, ``parse_msa_config`` is a utility function which parses an MSA config file and returns a dictionary of shutter coordinates and status. By default, only open and stuck-open shutters are included, and the status is a boolean value (True if the shutter is stuck-open, False if it is simply open); however, by setting ``return_all=True``, the function returns a dictionary of every shutter in the MSA, and the status is a single character code ('x' is inactive, 's' is stuck-open, '1' is open, and '0' is closed). ::
+Finally, ``parse_msa_config`` is a utility function which parses an MSA config file and returns a dictionary of shutter coordinates and status. By default, only open and stuck-open shutters are included, and the status is a boolean value (True if the shutter is stuck-open, False if it is simply open); however, by setting ``open_only=False``, the function returns a dictionary of every shutter in the MSA, and the status is a single-character code ('x' is inactive, 's' is stuck-open, '1' is open, and '0' is closed). ::
 
     >>> for (q,i,j), stuck in parse_msa_config('msaviz/test/single_shutter.csv').items():
     ...     print('Q {}, I {}, J {} - {}'.format(q+1, i+1, j+1, stuck))
