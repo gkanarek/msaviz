@@ -11,3 +11,4 @@ update_package_dist.sh
 packaging_info.txt
 blacklist.txt
 .ipynb*
+logs/

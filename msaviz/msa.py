@@ -691,8 +691,9 @@ class MSAConfig(object):
             return
         
         if np.count_nonzero(ok) != targets.size:
-            print("Trimming target wavelengths outside the filter " \
-                  "transmission range...")
+            if verbose:
+                print("Trimming target wavelengths outside the filter " \
+                      "transmission range...")
             targets = targets[ok]
         
         nt = targets.size

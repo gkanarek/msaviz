@@ -20,7 +20,7 @@ NOTE: these instructions have not been tested on Windows.
 
 You can specify a particular python version when creating the conda environment with ``python=2`` or ``python=3`` or something similar; otherwise, it will default to the python version of your Anaconda distribution.
 
-If you prefer to use msaviz in an existing conda environment (which already has the dependencies installed), feel free to do so. Just skip the ``conda create`` line, and then  ``$ source activate <your_environment>`` instead of ``$ source activate msaviz``.
+If you prefer to use msaviz in an existing conda environment (which already has the dependencies installed), feel free to do so. Just skip the ``conda create`` line, and then  ``$ source activate <your_environment>`` instead of ``$ source activate msaviz``. However, make sure that your environment has `sufficiently-new versions <https://github.com/gkanarek/msaviz/blob/master/requirements.txt>`_ of the dependent packages.
 
 **Step 2: Install Kivy and its dependencies.**
 
@@ -53,7 +53,7 @@ If you're viewing this on testpypi.python.org, try this instead:
 
 Quickstart Guide
 ----------------
-To begin using MSAViz, start the conda environment (if on an STScI Mac, see above) and run the package:
+To begin using MSAViz, start the conda environment (if on an STScI Mac, activate Homebrew before the environment; see above) and run the package:
 ::
 
     $ source activate msaviz
@@ -77,6 +77,8 @@ On the spectrum view screen, the spectrum from each shutter is displayed on a re
 
 To zoom & pan the display, simulate a multi-touch with a right-click (which will leave a small red dot on the screen, which is the focus point for zooming), then click and drag to increase or decrease zoom. After zooming in, click and drag to pan in any direction. You can zoom back out with the same method as zooming in.
 
+Click ``Check Wavelength`` to open the associated dialog (see below).
+
 Click ``Export...`` and choose a filename to export an ascii table showing the open shutters and their wavelength bounds on each detector (including the predicted lost wavelengths due to the detector gap).
 
 Click ``Save...`` and choose a filename to export a PNG image of the spectrum display. This function does not work when the display is zoomed.
@@ -84,6 +86,16 @@ Click ``Save...`` and choose a filename to export a PNG image of the spectrum di
 Click ``Shutters...`` to move to the shutter view Screen (see below), or ``Back`` to return to the file select Screen.
 
 .. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/spectrumview_screen.png
+
+**Check Wavelength Dialog**
+
+On the Check Wavelength dialog, you can identify where a particular wavelength or set of wavelengths will likely fall with respect to the two detectors, for all open shutters at once. Enter a wavelength in the text box and press ``Submit`` to add that wavelength to the list.
+
+Once at least one wavelength has been entered, a scrollable table will appear below, showing the list of open shutter coordinates, and where each wavelength will likely fall for each shutter.  This will also warn if a particular wavelength will fall near the edge of one of the two detectors for a given shutter, since that wavelength may fall off of that detector during the actual observation.
+
+Click ``Save to File`` and select a filename and path to save the table of wavelengths to a file. Click ``Done`` to go back to the spectrum view screen.
+
+.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/checkwavelength_dialog.png
 
 **Shutter View Screen**
 

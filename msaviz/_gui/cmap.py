@@ -11,7 +11,7 @@ using a single colormap
 
 import numpy as np
 
-_Spectral_data = tuple(( #we reverse it to get Spectral_r
+_Spectral_data = tuple(reversed(( #we reverse it to get Spectral_r
     (0.61960784313725492, 0.003921568627450980, 0.25882352941176473),
     (0.83529411764705885, 0.24313725490196078 , 0.30980392156862746),
     (0.95686274509803926, 0.42745098039215684 , 0.2627450980392157 ),
@@ -23,7 +23,7 @@ _Spectral_data = tuple(( #we reverse it to get Spectral_r
     (0.4                , 0.76078431372549016 , 0.6470588235294118 ),
     (0.19607843137254902, 0.53333333333333333 , 0.74117647058823533),
     (0.36862745098039218, 0.30980392156862746 , 0.63529411764705879)
-    ))
+    )))
 
 vals = np.linspace(0., 1., len(_Spectral_data))
 

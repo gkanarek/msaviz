@@ -5,8 +5,19 @@ Created on Tue May 16 12:37:06 2017
 @author: gkanarek
 """
 
-import os
+from os import path
 from threading import Thread
+
+home_dir = path.dirname(path.realpath(__file__))
+base_dir = path.realpath(path.join(home_dir, '..'))
+
+from kivy.config import Config
+Config.setall('kivy', {'exit_on_escape':0, 'desktop':1, 'log_enable': 1,
+                       'log_dir': path.join(base_dir, 'logs'), 
+                       'log_level': 'debug',
+                       'window_icon': path.join(base_dir, 'data', 
+                                                'nirspec.iconset',
+                                                'icon_512x512.png')})
 
 from kivy.app import App
 from kivy.lang import Builder
@@ -33,12 +44,11 @@ ScreenManager:
         id: shutterscreen
 """
 
-home_dir = os.path.dirname(os.path.realpath(__file__))
+
 
 class WaveTool(App):
-    homedir = StringProperty(home_dir)
-    working_dir = StringProperty(os.path.realpath(os.path.join(home_dir, 
-                                                              '..', 'test')))
+    homedir = StringProperty(base_dir)
+    working_dir = StringProperty(path.join(base_dir, 'test'))
     filt_grating = ListProperty([('clear', 'prism'),
                                  ('f070lp', 'g140h'),
                                  ('f070lp', 'g140m'),
@@ -71,6 +81,9 @@ class WaveTool(App):
         if not self.msa_file or not self.filtname or not self.gratname:
             return
         
+        if (self.filtname, self.gratname) not in self.filt_grating:
+            return
+        
         self.waiting = WaitPopup(num_shutters=0,
                                  current_shutter = 0)
         self.waiting.open()
@@ -95,7 +108,7 @@ class WaveTool(App):
     
     def build(self):
         self.title = "MSA Spectral Visualization Tool"
-        self.icon = os.path.join(home_dir, '..', 'data', 'nirspec.png')
+        self.icon = path.join(base_dir, 'data', 'nirspec.png')
         self.fglist = ["{}/{}".format(f,g) for f,g in self.filt_grating]
         import pdb, traceback, sys
         try:

@@ -16,7 +16,7 @@ from kivy.properties import (AliasProperty, StringProperty, ListProperty,
                              NumericProperty, ReferenceListProperty,
                              ObjectProperty)
 
-from ..widgets.popups import MSAFilePopup
+from ..widgets.popups import MSAFilePopup, WavelengthPopup
 from ..widgets.spectral import SpectralBase
 from ..widgets import FloatStencil, LockScatter
 from ..spectrumview import SpectrumLayout
@@ -101,26 +101,32 @@ Builder.load_string("""#:import os os
                 font_size: '12pt'
             Button:
                 size_hint_x: None
-                width: '80dp'
+                width: '150dp'
+                text: 'Check Wavelength'
+                on_release: root.wavelength_dialog()
+                font_size: '12pt'
+            Button:
+                size_hint_x: None
+                width: '100dp'
                 text: 'Export...'
                 on_release: root.export_dialog()
                 font_size: '12pt'
             Button:
                 size_hint_x: None
-                width: '80dp'
+                width: '100dp'
                 text: 'Save...'
                 on_release: root.save_dialog()
                 font_size: '12pt'
                 disabled: dpane.scale > 1.0
             Button:
                 size_hint_x: None
-                width: '80dp'
+                width: '100dp'
                 text: 'Shutters...'
                 on_release: app.sm.current = 'shutters'
                 font_size: '12pt'
             Button:
                 size_hint_x: None
-                width: '80dp'
+                width: '100dp'
                 text: 'Back'
                 on_release: app.sm.current = 'init'
                 font_size: '12pt'
@@ -198,3 +204,7 @@ class SpectrumScreen(Screen):
         filebase, ext = os.path.splitext(png_out)
         png_out = filebase + '.png'
         self.ids.dpane.export_to_png(png_out)
+    
+    def wavelength_dialog(self):
+        popup = WavelengthPopup()
+        popup.open()
