@@ -85,7 +85,7 @@ class WaveTool(App):
             return
         
         self.waiting = WaitPopup(num_shutters=0,
-                                 current_shutter = 0)
+                                 current_shutter=0)
         self.waiting.open()
         
         t = Thread(target=self.init_msa)
@@ -110,6 +110,7 @@ class WaveTool(App):
         self.title = "MSA Spectral Visualization Tool"
         self.icon = path.join(base_dir, 'data', 'nirspec.png')
         self.fglist = ["{}/{}".format(f,g) for f,g in self.filt_grating]
+        WaitPopup() #to pre-load animation
         import pdb, traceback, sys
         try:
             self.sm = Builder.load_string(kv)

@@ -1,14 +1,20 @@
-======================
-MSA Visualization Tool
-======================
+====================================
+JWST MSA Spectral Visualization Tool
+====================================
 
-This tool is a prototype for the "Spectrum View" mode, when designing a NIRSpec MSA observation with APT. The intent for the tool is to provide a means of visualizing the spectra which will be observed given a particular MSA shutter configuration, filter, and grating.
+The JWST MSA Spectral Visualization Tool (MSAViz) was designed to visualize the layout of MOS spectra on the NIRSpec detectors, given a particular MSA shutter configuration (exported from APT), filter, and disperser. This gives the user a means of identifying problematic shutters, for which wavelengths of interest which may fall near or in the detector gap during observations.
 
-In the current standalone implementation, the user must provide an MSA configuration file, which is a .csv file which can be exported from APT, and contains a record of which shutters are open. Once the MSA config file has been parsed, and a filter+grating combination is chosen, the tool displays a simplified model of where the spectra from the open shutters will fall on the NRS1 and NRS2 detectors.
-
-Installation
+Introduction
 ------------
-It is strongly recommended to use MSAViz in conjunction with the `Anaconda Python distribution <https://www.continuum.io/anaconda-overview>`_, which greatly simplifies the installation of dependencies.
+
+A proposal for a MOS observation with NIRSpec will often intend to observe a particular wavelength region of interest, depending on the science case of the proposal. A user who designs such an observation with APT and the MSA Planning Tool (MPT) will need to identify the wavelengths that will be obtained from spectra observed with a particular MSA configuration, to determine whether the region of interest is likely to be included in the spectra for the associated targets, or if the region instead falls in the detector gap (or beyond the bounds of the detector entirely) for one or more targets.
+
+The NIRSpec instrument model (calibrated from ground-test data) can be used to establish a WCS solution that assigns a wavelength to each pixel on both detectors. Doing so for each configuration considered during a proposal would be extremely time-consuming and computationally expensive. This tool provides an interface to a parameterized prediction algorithm which streamlines these calculations, and visualizes them in an intuitive way for the user's exploration.
+
+Installation with Anaconda and pip
+----------------------------------
+
+It is strongly recommended to use MSAViz in conjunction with the `Anaconda Python distribution <https://www.continuum.io/anaconda-overview>`_, which greatly simplifies the installation of dependencies. These instructions assume that Anaconda has been successfully installed.
 
 NOTE: these instructions have not been tested on Windows.
 
@@ -53,6 +59,34 @@ If you're viewing this on testpypi.python.org, try this instead:
 
 Quickstart Guide
 ----------------
+MSAViz requires an MSA configuration file to be exported from APT.
+
+**Export an MSA Config file from APT**
+
+In terms of the proposal creation workflow, the use of MSAViz occurs once the MSA Planning Tool (MPT) has generated plans for a given observation. To export an MSA config file that can be parsed by MSAViz, follow these steps:
+
+1. Open the JWST proposal with APT, and navigate to the specific observation in the proposal's hierarchical menu. Press on the arrow next to the desired MSA plan, which will open the MPT.
+
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/APT1.png
+   :alt: APT screenshot #1
+
+   Screenshot of an example JWST proposal in APT. Once the desired plan has been selected, press the arrow button next to the drop-down menu (indicated with an orange circle) to enter the MSA Planning Tool.
+
+2. On the Plans tab of the MPT, choose a pointing to visualize with MSAViz, and press the Show button for that pointing, which will open the Shutter View window.
+
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/APT2.png
+   :alt: APT screenshot #2
+
+   Screenshot of an example JWST proposal in APT. Press the Show button (indicated with an orange circle) to open the Shutter View window for the desired pointing.
+
+3. In the Shutter View window, press Export to CSV, and save the configuration file to your working directory. MSAViz will save any output from the tool into the same directory by default (see the File Select Screen section, below).
+
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/APT3.png
+   :alt: APT screenshot #3
+
+   Screenshot of an example JWST proposal in APT. Press the Export to CSV button (indicated with an orange circle) to export the MSA configuration file for MSAViz.
+
+**Start MSAViz application**
 To begin using MSAViz, start the conda environment (if on an STScI Mac, activate Homebrew before the environment; see above) and run the package:
 ::
 
@@ -69,8 +103,11 @@ When the interface has opened, complete the following steps on the file select s
 4. Press ``Parse`` and wait while the MSA config file is parsed and the wavelengths are calculated.
 5. Once this is complete, press ``Show the Spectrum Display!`` to view the visualization.
 
-.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/fileselect_screen.png
-
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/fileselect_screen.png
+   :alt: File Select Screen
+   
+   Screenshot of File Select screen from MSAViz.
+   
 **Spectrum View Screen**
 
 On the spectrum view screen, the spectrum from each shutter is displayed on a representation of the two detectors. A colorbar at the bottom of the screen shows the displayed wavelengths. 
@@ -85,7 +122,10 @@ Click ``Save...`` and choose a filename to export a PNG image of the spectrum di
 
 Click ``Shutters...`` to move to the shutter view Screen (see below), or ``Back`` to return to the file select Screen.
 
-.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/spectrumview_screen.png
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/spectrumview_screen.png
+   :alt: Spectrum View Screen
+   
+   Screenshot of Spectrum View Screen from MSAViz.
 
 **Check Wavelength Dialog**
 
@@ -95,7 +135,10 @@ Once at least one wavelength has been entered, a scrollable table will appear be
 
 Click ``Save to File`` and select a filename and path to save the table of wavelengths to a file. Click ``Done`` to go back to the spectrum view screen.
 
-.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/checkwavelength_dialog.png
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/checkwavelength_dialog.png
+   :alt: Check Wavelength Dialog
+   
+   Screenshot of Check Wavelength Dialog from MSAViz.
 
 **Shutter View Screen**
 
@@ -107,7 +150,10 @@ Click ``Find...`` to enter a set of shutter coordinates (with the option to sele
 
 Click ``Save...`` and choose a filename to export a PNG image of the shutter display. This function does not work when the display is zoomed. Click ``Back`` to return to the spectrum view screen.
 
-.. image:: https://github.com/gkanarek/msaviz/blob/master/screenshots/shutterview_screen.png
+.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/shutterview_screen.png
+   :alt: Shutter View Screen
+   
+   Screenshot of Shutter View Screen from MSAViz
 
 Programmatic API
 ----------------

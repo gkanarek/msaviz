@@ -12,3 +12,4 @@ packaging_info.txt
 blacklist.txt
 .ipynb*
 logs/
+package_app.sh
