@@ -26,7 +26,7 @@ NOTE: these instructions have not been tested on Windows.
 
 You can specify a particular python version when creating the conda environment with ``python=2`` or ``python=3`` or something similar; otherwise, it will default to the python version of your Anaconda distribution.
 
-If you prefer to use msaviz in an existing conda environment (which already has the dependencies installed), feel free to do so. Just skip the ``conda create`` line, and then  ``$ source activate <your_environment>`` instead of ``$ source activate msaviz``. However, make sure that your environment has `sufficiently-new versions <https://github.com/gkanarek/msaviz/blob/master/requirements.txt>`_ of the dependent packages.
+If you prefer to use msaviz in an existing conda environment (which already has the dependencies installed), feel free to do so. Just skip the ``conda create`` line, and then  ``$ source activate <your_environment>`` instead of ``$ source activate msaviz``. However, make sure that your environment has `sufficiently-new versions <https://github.com/spacetelescope/msaviz/blob/master/requirements.txt>`_ of the dependent packages.
 
 **Step 2: Install Kivy and its dependencies.**
 
@@ -40,7 +40,7 @@ If you prefer to use msaviz in an existing conda environment (which already has 
 
 *Mac:*
 
-To install the Kivy dependencies, you will need to have the `Homebrew package manager <https://brew.sh/>`_ installed. If you are trying to install this on a Mac owned by STScI, you will likely run into problems when attempting to install Homebrew. I have included the ``install_homebrew.sh`` script `here <https://github.com/gkanarek/msaviz/blob/master/install_homebrew.sh>`_, to handle this task. Once you run the script, and follow the instructions at the end, simply do ``$ brew_activate`` in advance any time you activate your conda environment.
+To install the Kivy dependencies, you will need to have the `Homebrew package manager <https://brew.sh/>`_ installed. If you are trying to install this on a Mac owned by STScI, you will likely run into problems when attempting to install Homebrew. I have included the ``install_homebrew.sh`` script `here <https://github.com/spacetelescope/msaviz/blob/master/install_homebrew.sh>`_, to handle this task. Once you run the script, and follow the instructions at the end, simply do ``$ brew_activate`` in advance any time you activate your conda environment.
 ::
 
     $ brew install pkg-config sdl2 sdl2_image sdl2_ttf sdl2_mixer
@@ -67,21 +67,21 @@ In terms of the proposal creation workflow, the use of MSAViz occurs once the MS
 
 1. Open the JWST proposal with APT, and navigate to the specific observation in the proposal's hierarchical menu. Press on the arrow next to the desired MSA plan, which will open the MPT.
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/APT1.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/APT1.png
    :alt: APT screenshot #1
 
    Screenshot of an example JWST proposal in APT. Once the desired plan has been selected, press the arrow button next to the drop-down menu (indicated with an orange circle) to enter the MSA Planning Tool.
 
 2. On the Plans tab of the MPT, choose a pointing to visualize with MSAViz, and press the Show button for that pointing, which will open the Shutter View window.
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/APT2.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/APT2.png
    :alt: APT screenshot #2
 
    Screenshot of an example JWST proposal in APT. Press the Show button (indicated with an orange circle) to open the Shutter View window for the desired pointing.
 
 3. In the Shutter View window, press Export to CSV, and save the configuration file to your working directory. MSAViz will save any output from the tool into the same directory by default (see the File Select Screen section, below).
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/APT3.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/APT3.png
    :alt: APT screenshot #3
 
    Screenshot of an example JWST proposal in APT. Press the Export to CSV button (indicated with an orange circle) to export the MSA configuration file for MSAViz.
@@ -103,7 +103,7 @@ When the interface has opened, complete the following steps on the file select s
 4. Press ``Parse`` and wait while the MSA config file is parsed and the wavelengths are calculated.
 5. Once this is complete, press ``Show the Spectrum Display!`` to view the visualization.
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/fileselect_screen.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/fileselect_screen.png
    :alt: File Select Screen
    
    Screenshot of File Select screen from MSAViz.
@@ -122,7 +122,7 @@ Click ``Save...`` and choose a filename to export a PNG image of the spectrum di
 
 Click ``Shutters...`` to move to the shutter view Screen (see below), or ``Back`` to return to the file select Screen.
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/spectrumview_screen.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/spectrumview_screen.png
    :alt: Spectrum View Screen
    
    Screenshot of Spectrum View Screen from MSAViz.
@@ -135,7 +135,7 @@ Once at least one wavelength has been entered, a scrollable table will appear be
 
 Click ``Save to File`` and select a filename and path to save the table of wavelengths to a file. Click ``Done`` to go back to the spectrum view screen.
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/checkwavelength_dialog.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/checkwavelength_dialog.png
    :alt: Check Wavelength Dialog
    
    Screenshot of Check Wavelength Dialog from MSAViz.
@@ -150,7 +150,7 @@ Click ``Find...`` to enter a set of shutter coordinates (with the option to sele
 
 Click ``Save...`` and choose a filename to export a PNG image of the shutter display. This function does not work when the display is zoomed. Click ``Back`` to return to the spectrum view screen.
 
-.. figure:: https://github.com/gkanarek/msaviz/blob/master/screenshots/shutterview_screen.png
+.. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/shutterview_screen.png
    :alt: Shutter View Screen
    
    Screenshot of Shutter View Screen from MSAViz
