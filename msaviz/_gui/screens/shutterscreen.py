@@ -27,7 +27,7 @@ Builder.load_string("""#:import os os
     anchor_x: 'center'
     anchor_y: 'center'
     pos_hint: self.zposhint
-    size_hint: self.zsizehint
+    size_hint: 0.99 / 2.24, 0.99 / 2.38
     on_selected: app.update_selected(self.quadrant, self.selected)
     canvas.before:
         Color:
@@ -86,9 +86,14 @@ Builder.load_string("""#:import os os
             LockScatter:
                 size_hint: 1., 1.
                 id: shutterpane
-                ShutterLayout:
-                    id: shutterlayout
+                AnchorLayout:
+                    anchor_x: 'center'
+                    anchor_y: 'center'
                     size_hint: 1., 1.
+                    ShutterLayout:
+                        id: shutterlayout
+                        size_hint: self.lsize_hint
+                        psize: [] if self.parent is None else self.parent.size
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
@@ -128,7 +133,7 @@ Builder.load_string("""#:import os os
                 size_hint_x: None
                 width: '80dp'
                 text: 'Back'
-                on_release: app.sm.current = 'spectral'
+                on_release: app.change_screen('spectral', 'right')
                 font_size: '12pt'
 """)
 
@@ -180,37 +185,34 @@ class ShutterZone(AnchorLayout):
     shutter_texture = AliasProperty(_get_shutter_texture, None,
                                     bind=['update', 'selected', 'quadrant'])
     
-    def _get_zsizehint(self):
-        if self.aspect == 0:
-            self.aspect = 1.
-        xhint = 0.48
-        yhint = 0.48 / self.aspect
-        return [xhint, yhint]
-    
-    zsizehint = AliasProperty(_get_zsizehint, None, bind=['aspect'])
-    
     def _get_zposhint(self):
-        if self.aspect == 0:
-            self.aspect = 1.
-        xhint = 0.5 * (1 - self.quadrant // 2) + 0.01
-        yhint = 0.25 - 0.24 / self.aspect + 0.5 * (1 - self.quadrant % 2)
+        if self.quadrant in [0, 1]:
+            xhint = 1.24 / 2.24
+        else:
+            xhint = 0.005
+        if self.quadrant in [0, 2]:
+            yhint = 1.38 / 2.38
+        else:
+            yhint = 0.005
+        #xhint = 0.5 * (1 - self.quadrant // 2) + 0.01
+        #yhint = 0.25 - 0.24 / self.aspect + 0.5 * (1 - self.quadrant % 2)
         return {'x': xhint, 'y': yhint}
     
     zposhint = AliasProperty(_get_zposhint, None, bind=['quadrant', 'aspect'])    
     
 
 class ShutterLayout(FloatLayout):
+    aspect = NumericProperty(17./18.)
+    psize = ListProperty([])
     
-    def _get_aspect(self):
-        """
-        Determine the aspect ratio, to keep everthing positioned and sized 
-        properly, even after resize.
-        """
-        if self.width <= 0. or self.height <= 0.:
-            return 1.
-        return float(self.height) / float(self.width)
+    def _get_lsize_hint(self):
+        paspect = 1. if not self.psize else (self.psize[1] / self.psize[0])
+        if paspect > self.aspect:
+            return 1., self.aspect / paspect
+        return paspect / self.aspect, 1.
     
-    aspect = AliasProperty(_get_aspect, None, bind=['size'])
+    lsize_hint = AliasProperty(_get_lsize_hint, None, bind=['psize', 'aspect'])
+    
 
 class ShutterScreen(Screen):
     msafile = StringProperty('')
@@ -225,6 +227,7 @@ class ShutterScreen(Screen):
     def on_leave(self):
         self.ids.shutterpane.scale = 1.0
         self.ids.shutterpane.transform_with_touch(False)
+        
     
     def _recent_select_text(self):
         if not self.recent_select:

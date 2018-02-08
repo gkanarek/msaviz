@@ -118,14 +118,30 @@ Builder.load_string("""
                         size: self.size
                         pos: self.pos
             Widget:                
-        Widget:
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
+            BoxLayout:
+                size_hint: None, None
+                size: '400dp', '30dp'
+                CheckBox:
+                    active: True
+                    on_active: app.show_stuck = self.active
+                    color: 1., 1., 1., 5.
+                Label:
+                    text: "Display spectra from stuck-open shutters"
+                    size_hint: None, None
+                    size: '350dp','30dp'
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
         AnchorLayout:
             anchor_x: 'center'
             size_hint_y: None
             height: '30dp'
             Button:
                 text: "Show the Spectrum Display!"
-                on_release: if root.go_display(): app.sm.current = 'spectral'
+                on_release: if root.go_display(): app.change_screen('spectral', 'left')
                 size_hint_x: 0.75
 """)
 

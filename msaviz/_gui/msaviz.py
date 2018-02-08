@@ -70,6 +70,14 @@ class WaveTool(App):
     selected_shutters = ListProperty([[],[],[],[]])
     msa = ObjectProperty(None, allownone=True)
     waiting = ObjectProperty(None, allownone=True)
+    show_stuck = BooleanProperty(True)
+    
+    def change_screen(self, to_screen, direction):
+        """
+        Change the current screen using a transition in the given direction.
+        """
+        self.sm.transition.direction = direction
+        self.sm.current = to_screen
     
     def on_msa_file(self, instance, value):
         self.wrapper()

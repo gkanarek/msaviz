@@ -47,6 +47,11 @@ To install the Kivy dependencies, you will need to have the `Homebrew package ma
     $ USE_OSX_FRAMEWORKS=0 pip install -I --no-cache-dir --no-binary all kivy
     $ garden install filebrowser
 
+Note that (at the time these instructions were written) the current official release of Kivy causes an error on installation due to a recent version of SDL2. If this error occurs, install the dev version of Kivy instead, using this command:
+::
+
+    $ USE_OSX_FRAMEWORKS=0 pip install -I --no-cache-dir --no-binary all http://github.com/kivy/kivy/archive/master.zip
+
 **Step 3: Install MSAViz.**
 ::
 
@@ -101,6 +106,7 @@ When the interface has opened, complete the following steps on the file select s
 2. Select a filter & grating combination using the dropdown.
 3. Choose an MSA config file which has been exported from APT.
 4. Press ``Parse`` and wait while the MSA config file is parsed and the wavelengths are calculated.
+5. The ``Display spectra from stuck-open shutters`` checkbox will toggle whether or not spectra from stuck-open shutters will be included in the visualization.
 5. Once this is complete, press ``Show the Spectrum Display!`` to view the visualization.
 
 .. figure:: https://github.com/spacetelescope/msaviz/blob/master/screenshots/fileselect_screen.png

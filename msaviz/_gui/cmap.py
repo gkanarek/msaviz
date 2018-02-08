@@ -185,6 +185,7 @@ class spectral_cmap(object):
 
             # ensure that all 'under' values will still have negative
             # value after casting to int
+            xa[~np.isfinite(xa)] = -1
             np.copyto(xa, -1, where=xa < 0.0)
             xa = xa.astype(int)
 

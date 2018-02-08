@@ -51,7 +51,7 @@ Builder.load_string("""
         Color:
             rgba: 1, 1, 1, self.border[3]
         Line:
-            points: self.border_points[3]    
+            points: self.border_points[3] 
 """)
 
 class SpectralBase(Widget):
@@ -116,7 +116,10 @@ class SpectralBase(Widget):
             data = self.data
         scm = self.cmap(vmin=self.sci_min, vmax=self.sci_max)
         output_grad = scm(data, bytes=True)
-        blank = np.logical_or(data < self.sci_min, data > self.sci_max)
+        fin = np.isfinite(data)
+        blank = np.zeros_like(data, dtype=bool)
+        blank[fin] = np.logical_or(data[fin] < self.sci_min, 
+                                   data[fin] > self.sci_max)
         output_grad[blank, 3] = 0.
         txtr.blit_buffer(output_grad.tostring(), colorfmt='rgba', 
                          bufferfmt='ubyte')

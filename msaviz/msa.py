@@ -341,9 +341,13 @@ class MSA(object):
         correction = models.Polynomial1D(degree=3, c0=par[0], c1=par[1], 
                                          c2=par[2], c3=par[3])(all_pix[in_bounds])
         
+        
         #Construct and return the wavelengths array
-        wavelengths = np.zeros_like(all_pix)
-        wavelengths[in_bounds] = base.squeeze()[1:] + correction
+        try:
+            wavelengths = np.zeros_like(all_pix)
+            wavelengths[in_bounds] = base.squeeze()[1:] + correction
+        except IndexError:
+            import pdb; pdb.set_trace()
         
         return wavelengths
         
@@ -553,6 +557,7 @@ class MSAConfig(object):
         all_waves = self._msa(coords)
         top = 1 - self._quads % 2
         lims = np.full((self.nopen, 4), np.nan, dtype=float)
+        
         for n, waves in enumerate(all_waves):
             wopen = waves[o]
             wstuck = waves[s]
@@ -560,8 +565,9 @@ class MSAConfig(object):
             self._stu[n, top[s], 170-coords[2,s]] = wstuck
             self._nrs[n, top[o], 170-coords[2,o]] = wopen
             
-            ok = np.logical_and(wopen.min(axis=1) <= hi,
-                                wopen.max(axis=1) >= lo)
+            fin, = np.any(np.isfinite(wopen), axis=1).nonzero() #ensure there's at least one good value
+            ok = fin[np.logical_and(np.nanmin(wopen[fin],axis=1) <= hi,
+                                    np.nanmax(wopen[fin],axis=1) >= lo)]
             lims[ok,   n*2] = np.maximum(wopen[ok].min(axis=1), lo)
             lims[ok, 1+n*2] = np.minimum(wopen[ok].max(axis=1), hi)
         self._shutter_limits = lims

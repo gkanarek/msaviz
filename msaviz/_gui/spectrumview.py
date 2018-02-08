@@ -29,7 +29,7 @@ Builder.load_string("""
     size_hint: 1., 1.
     pos_hint: {'x': 0., 'y': 0.}
     bg_shading: 0.95 - int(self.stuck)
-    txtr_shading: 1-0.5*int(self.stuck)
+    txtr_shading: self.txshade
     border: [1, 1 - (self.quadrant % 2), 1, self.quadrant % 2]
     border_width: 1.1
     
@@ -38,16 +38,19 @@ Builder.load_string("""
     anchor_y: 'center'
     size_hint: self.qsizehint
     pos_hint: self.qposhint
+    show_stuck: app.show_stuck
     SpectralQuadrant:
         id: chosen
         quadrant: root.quadrant
         sci_range: root.sci_range
         data: root.data
     SpectralQuadrant:
+        id: stuckq
         quadrant: root.quadrant
         sci_range: root.sci_range
         data: root.stuck_data
         stuck: True
+        show: root.show_stuck
 
 <OutsideLabel>:
     halign: 'center'
@@ -73,7 +76,7 @@ Builder.load_string("""
         top: root.top
         font_size: app.labelsize
         outline_width: 1
-        text: app.fg
+        text: (app.fg).upper()
         text_size: self.size
         halign: 'center'
         valign: 'middle'
@@ -143,16 +146,28 @@ class SpectralQuadrant(SpectralBase):
     
     quadrant = NumericProperty(0)
     stuck = BooleanProperty(False)
+    show = BooleanProperty(False)
     
     def _get_inset_size(self):
         return self.width - 4, self.height - 15
+    
+    inset_size = AliasProperty(_get_inset_size, None, bind=['size'])
         
     def _get_inset_pos(self):
         xp = self.x + 2
-        yp = self.y + 15 * (self.quadrant % 2)
+        yp = self.y + 15 * ((self.quadrant + 1) % 2)
         return (xp, yp)
     
     inset_pos = AliasProperty(_get_inset_pos, None, bind=['x', 'y', 'quadrant'])
+    
+    def _get_txshade(self):
+        if self.stuck:
+            if not self.show:
+                return 0.
+            return 0.5
+        return 1.0
+    
+    txshade = AliasProperty(_get_txshade, None, bind=['stuck','show'])
     
 class SpectralZone(AnchorLayout):
     """
@@ -209,6 +224,7 @@ class SpectrumLayout(FloatLayout):
     shutter_limits = DictProperty({}) #Tracking shutter limits for export
     selected = ListProperty([])
     selected_boxes = DictProperty({})
+    show_stuck = BooleanProperty(True)
     
     empties = ListProperty([])
     
@@ -250,10 +266,14 @@ class SpectrumLayout(FloatLayout):
     def get_select_bounds(self, q, i, j):
         top = 1 - q % 2
         nrs1, nrs2 = self.nrs[:,top,170-j]
-        x1, = np.nonzero(np.logical_and(nrs1 >= self.sci_min, 
-                                        nrs1 <= self.sci_max))
-        x2, = np.nonzero(np.logical_and(nrs2 >= self.sci_min, 
-                                        nrs2 <= self.sci_max))
+        
+        fin1, = np.isfinite(nrs1).nonzero()
+        fin2, = np.isfinite(nrs2).nonzero()
+        
+        x1 = fin1[np.logical_and(nrs1[fin1] >= self.sci_min, 
+                                 nrs1[fin1] <= self.sci_max)]
+        x2 = fin2[np.logical_and(nrs2[fin2] >= self.sci_min, 
+                                 nrs2[fin2] <= self.sci_max)]
         if x1.size < 1:
             b1 = []
         else:
@@ -302,6 +322,6 @@ class SpectrumLayout(FloatLayout):
                         group.add(Color(1, 1, 1, 0.6))
                         for ins in instr:
                             group.add(ins)
-                    self.selected_boxes[(q,i,j)] = group
-                    self.canvas.after.add(group)
+                        self.selected_boxes[(q,i,j)] = group
+                        self.canvas.after.add(group)
         self.canvas.ask_update()
